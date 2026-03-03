@@ -20,30 +20,147 @@ user_markets = {}
 
 def get_stages(market_id, niche):
     m = MARKETS.get(market_id, MARKETS["il"])
-    ctx = f'in the {m["nameEn"]} market ({m["google"]}), prices in {m["currency"]}'
+    ctx = f'in the {m["nameEn"]} market ({m["google"]}), all prices in {m["currency"]}'
+    base = f"""You are an expert ecommerce market research analyst. You MUST provide SPECIFIC NUMBERS and DATA - never say "data not available" or "I couldn't find". 
+If exact data is unavailable, provide your best professional ESTIMATES based on market knowledge and clearly mark them as estimates.
+ALWAYS respond in Hebrew only. Use tables and organized formatting."""
+    
     return [
         {"id":"google_search","label":"\U0001f50e \u05db\u05de\u05d5\u05ea \u05d7\u05d9\u05e4\u05d5\u05e9\u05d9\u05dd \u05d1\u05d2\u05d5\u05d2\u05dc",
-         "prompt":f'Market research: "{niche}" {ctx}. Use web search. Top 10 keywords with monthly volume, total searches, 12-month trend, seasonality, buying intent %. Include {m["lang"]} keywords. ACTUAL NUMBERS. Hebrew only.'},
+         "prompt":f"""{base}
+
+Research search volume for "{niche}" {ctx}. Use web search to find real data.
+
+You MUST provide a table with these columns for at least 10 keywords:
+| Keyword | Monthly Search Volume | Trend (up/down/stable) | Competition (high/med/low) | Buying Intent % |
+
+Include both Hebrew and English keywords relevant to {m["nameEn"]}.
+Also provide:
+- Total estimated monthly searches for this niche
+- Seasonality pattern (which months are peak)
+- Year-over-year growth estimate %
+- Top 3 long-tail keywords with high buying intent
+
+Give NUMBERS even if estimated. Hebrew only."""},
+
         {"id":"cpc_analysis","label":"\U0001f4b8 \u05e2\u05dc\u05d5\u05ea \u05e7\u05dc\u05d9\u05e7 (CPC)",
-         "prompt":f'Google Ads specialist. CPC for "{niche}" {ctx}. Use web search. 1)Google Search CPC per keyword in {m["currency"]} 2)Google Shopping CPC 3)Facebook/Instagram CPC 4)TikTok CPC 5)Average CPC 6)Competition per platform 7)Daily budget recommendation {m["currency"]} 8)CPA estimate 9)ROAS benchmark 10)Best ad platform for {m["nameEn"]}. ALL in {m["currency"]}. ACTUAL NUMBERS. Hebrew only.'},
+         "prompt":f"""{base}
+
+Analyze advertising costs for "{niche}" {ctx}. Use web search.
+
+Provide a detailed table:
+| Platform | Avg CPC | Competition | Est. Daily Budget | Est. Monthly Spend |
+
+Platforms to analyze: Google Search, Google Shopping, Facebook/Instagram, TikTok, YouTube.
+
+Also provide:
+- Recommended starting daily budget in {m["currency"]}
+- Estimated CPA (Cost Per Acquisition) in {m["currency"]}
+- Expected ROAS (Return on Ad Spend)
+- Best platform recommendation for {m["nameEn"]} market
+- Budget allocation recommendation (% per platform)
+
+All amounts in {m["currency"]}. Give NUMBERS. Hebrew only."""},
+
         {"id":"google_shopping","label":"\U0001f6d2 \u05e0\u05d9\u05ea\u05d5\u05d7 \u05d2\u05d5\u05d2\u05dc \u05e9\u05d5\u05e4\u05d9\u05e0\u05d2",
-         "prompt":f'Google Shopping for "{niche}" {ctx}. Use web search. Products count, price range, avg price, top 5 sellers, competition, market gaps, shipping. ACTUAL NUMBERS. Hebrew only.'},
+         "prompt":f"""{base}
+
+Research Google Shopping and ecommerce for "{niche}" {ctx}. Use web search.
+
+Provide:
+- Number of competing products on Google Shopping
+- Price range (min - max) in {m["currency"]}
+- Average price in {m["currency"]}
+- Top 5 sellers/stores with estimated market share %
+- Shipping costs and delivery times
+- Market gaps and opportunities
+- Product categories breakdown
+
+Give NUMBERS. Hebrew only."""},
+
         {"id":"social_media","label":"\U0001f4f1 \u05e8\u05e9\u05ea\u05d5\u05ea \u05d7\u05d1\u05e8\u05ea\u05d9\u05d5\u05ea",
-         "prompt":f'Social media for "{niche}" in {m["nameEn"]}. Use web search. Instagram, TikTok, Facebook, YouTube, local platforms, virality score 1-10, best platform, content strategy. ACTUAL NUMBERS. Hebrew only.'},
+         "prompt":f"""{base}
+
+Analyze social media presence for "{niche}" in {m["nameEn"]}. Use web search.
+
+For each platform (Instagram, TikTok, Facebook, YouTube), provide:
+| Platform | Hashtag Volume | Top Influencers | Engagement Rate | Content Type |
+
+Also provide:
+- Virality score (1-10) for this niche
+- Best platform recommendation
+- Content strategy (what type of content works)
+- Estimated follower growth potential
+- Top 5 relevant hashtags per platform
+
+Give NUMBERS. Hebrew only."""},
+
         {"id":"competitors","label":"\u2694\ufe0f \u05e0\u05d9\u05ea\u05d5\u05d7 \u05de\u05ea\u05d7\u05e8\u05d9\u05dd",
-         "prompt":f'Competitors for "{niche}" in {m["nameEn"]} ecommerce. Use web search. Top 5-7 stores, TAM in {m["currency"]}, market structure, business models, barriers, competitive advantage, CAC, regulation. ACTUAL NUMBERS. Hebrew only.'},
+         "prompt":f"""{base}
+
+Analyze competitors for "{niche}" ecommerce in {m["nameEn"]}. Use web search.
+
+Provide a competitor table:
+| Store Name | Est. Monthly Revenue | Price Range | Strengths | Weaknesses |
+
+For top 5-7 competitors. Also provide:
+- Total Addressable Market (TAM) in {m["currency"]}
+- Market structure (fragmented/concentrated)
+- Barriers to entry
+- Competitive advantages available for new entrant
+- Estimated Customer Acquisition Cost in {m["currency"]}
+
+Give NUMBERS. Hebrew only."""},
+
         {"id":"sales_estimate","label":"\U0001f4b0 \u05ea\u05d7\u05d6\u05d9\u05ea \u05de\u05db\u05d9\u05e8\u05d5\u05ea",
-         "prompt":f'Sales forecast NEW store "{niche}" in {m["nameEn"]}. {{prev_data}} Conservative 1-6mo, Optimistic 6-12mo, Year 1, Investment, ROI. All {m["currency"]}. Hebrew only.'},
+         "prompt":f"""{base}
+
+Create sales forecast for a NEW online store selling "{niche}" in {m["nameEn"]}. 
+Previous research data: {{prev_data}}
+
+Provide monthly forecast table for 12 months:
+| Month | Revenue | Orders | Avg Order Value | Ad Spend | Profit |
+
+Two scenarios: Conservative and Optimistic.
+
+Also provide:
+- Required initial investment in {m["currency"]}
+- Break-even point (which month)
+- Year 1 total revenue estimate
+- Year 1 ROI %
+- Key assumptions
+
+All in {m["currency"]}. Give NUMBERS. Hebrew only."""},
+
         {"id":"summary","label":"\U0001f4cb \u05e1\u05d9\u05db\u05d5\u05dd \u05d5\u05d4\u05d7\u05dc\u05d8\u05d4",
-         "prompt":f'Executive summary "{niche}" in {m["nameEn"]}. {{prev_data}} Score X/10, 3 key metrics incl CPC, GO/NO-GO, opportunity, risk, entry strategy with ad budget, bottom line. {m["currency"]}. Hebrew only.'},
+         "prompt":f"""{base}
+
+Create executive summary for "{niche}" ecommerce in {m["nameEn"]}.
+Previous research data: {{prev_data}}
+
+MUST include:
+1. Overall Score: X/10 (with explanation)
+2. GO / NO-GO decision (clear recommendation)
+3. Top 3 opportunities
+4. Top 3 risks
+5. Key metrics summary:
+   - Market size in {m["currency"]}
+   - Average CPC in {m["currency"]}
+   - Expected monthly revenue (month 6)
+   - Expected ROI %
+6. Recommended entry strategy (step by step)
+7. Required budget breakdown in {m["currency"]}
+8. Bottom line: one paragraph final recommendation
+
+Give NUMBERS. Hebrew only."""},
     ]
 
 async def call_claude(prompt):
-    async with httpx.AsyncClient(timeout=120.0) as client:
+    async with httpx.AsyncClient(timeout=180.0) as client:
         r = await client.post("https://api.anthropic.com/v1/messages",
             headers={"Content-Type":"application/json","x-api-key":ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01"},
-            json={"model":"claude-sonnet-4-20250514","max_tokens":1500,
-                  "tools":[{"type":"web_search_20250305","name":"web_search"}],
+            json={"model":"claude-sonnet-4-20250514","max_tokens":2000,
+                  "tools":[{"type":"web_search_20250305","name":"web_search","max_uses":3}],
                   "messages":[{"role":"user","content":prompt}]})
         data = r.json()
         if "error" in data: raise Exception(data["error"].get("message","API Error"))
@@ -77,15 +194,21 @@ async def handle_niche(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not niche or niche.startswith("/"): return
     uid = update.effective_user.id; mid = user_markets.get(uid,"il"); m = MARKETS[mid]
 
-    await update.message.reply_text(f'\U0001f680 *\u05de\u05ea\u05d7\u05d9\u05dc \u05de\u05d7\u05e7\u05e8!*\n\U0001f4e6 {niche}\n{m["flag"]} {m["name"]}\n\n\u05d6\u05d4 \u05d9\u05d9\u05e7\u05d7 2-4 \u05d3\u05e7\u05d5\u05ea...', parse_mode=ParseMode.MARKDOWN)
+    await update.message.reply_text(f'\U0001f680 *\u05de\u05ea\u05d7\u05d9\u05dc \u05de\u05d7\u05e7\u05e8!*\n\U0001f4e6 {niche}\n{m["flag"]} {m["name"]}\n\n\u05d6\u05d4 \u05d9\u05d9\u05e7\u05d7 3-5 \u05d3\u05e7\u05d5\u05ea...', parse_mode=ParseMode.MARKDOWN)
 
     stages = get_stages(mid, niche); prev = {}
-    for stage in stages:
+    for i, stage in enumerate(stages):
         await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
+        
+        # Wait between requests to avoid rate limiting
+        if i > 0:
+            await asyncio.sleep(30)
+            await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
+        
         try:
             prompt = stage["prompt"]
             if "{prev_data}" in prompt:
-                sm = "\n".join([f"{k}: {v[:400]}" for k,v in prev.items()])
+                sm = "\n".join([f"{k}: {v[:500]}" for k,v in prev.items()])
                 prompt = prompt.replace("{prev_data}", f"Data:\n{sm}")
             result = await call_claude(prompt); prev[stage["id"]] = result
             txt = f'{stage["label"]}\n{"="*25}\n\n{trunc(result,3900)}'
